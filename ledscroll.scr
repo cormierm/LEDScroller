@@ -1,0 +1,285 @@
+F100 FFFF 00
+
+A100
+CALL 3F0        ;Initialize 82C55 - 2
+MOV BX,071A     ;ADDRESS OF DISPLAY MEMORY
+CALL 340        ;Print Welcome msg on the screen
+JMP 400
+
+A110
+MOV DI,700      ;Set pointer to beginning of message address
+JMP 150         ;Write from display memory to LED display
+
+A150
+MOV CX,80       ;Sets scrolling speed
+CALL 300
+;Load Column 1
+MOV DX,8C00     ;Load Rows in 1st Display
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 2nd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 3rd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 4th Display
+MOV DX,8001
+MOV AL,[DI]
+OUT DX,AL
+MOV DX,8000     ;Turn on LEDs
+MOV AL,10
+OUT DX,AL
+SUB DI,E
+CALL 300
+;Load Column 2
+MOV DX,8C00     ;Load Rows in 1st Display
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 2nd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 3rd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 4th Display
+MOV DX,8001
+MOV AL,[DI]
+OUT DX,AL
+MOV DX,8000     ;Turn on LEDs
+MOV AL,08
+OUT DX,AL
+SUB DI,E
+CALL 300
+;Load Column 3
+MOV DX,8C00     ;Load Rows in 1st Display
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 2nd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 3rd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 4th Display
+MOV DX,8001
+MOV AL,[DI]
+OUT DX,AL
+MOV DX,8000     ;Turn on LEDs
+MOV AL,04
+OUT DX,AL
+SUB DI,E
+CALL 300
+;Load Column 4
+MOV DX,8C00     ;Load Rows in 1st Display
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 2nd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 3rd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 4th Display
+MOV DX,8001
+MOV AL,[DI]
+OUT DX,AL
+MOV DX,8000     ;Turn on LEDs
+MOV AL,02
+OUT DX,AL
+SUB DI,E
+CALL 300
+;Load Column 5
+MOV DX,8C00     ;Load Rows in 1st Display
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 2nd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 3rd Display
+INC DX
+MOV AL,[DI]
+OUT DX,AL
+ADD DI,5        ;Load Rows in 4th Display
+MOV DX,8001
+MOV AL,[DI]
+OUT DX,AL
+MOV DX,8000     ;Turn on LEDs
+MOV AL,01
+OUT DX,AL
+SUB DI,13       ;Set pointer back to Column 1
+CALL 300
+DEC CX
+JZ 240
+JMP 153
+
+A240
+INC DI          ;Increment pointer
+CMP DI,BX       ;Sets length of message
+JE 250          ;Jump if at end of message
+JMP 150       
+
+A250
+MOV DI,700      ;Sets pointer back to the beginning of message
+JMP 150
+
+A300
+PUSH CX         ;Store CX
+MOV CX,2000     ;Delay to leave LEDs on before switching
+LOOP 303        ;Loop for delay
+POP CX          ;Restore CX
+MOV DX,8000     ;Turn off all LEDs
+XOR AL,AL       ;Set AL to 0
+OUT DX,AL       ;Turn off all columns
+RET
+
+A340
+;Print Welcome message
+MOV SI,350      ;Set address of message
+CALL E01E       ;OUT_STR
+RET
+
+A350
+DB 0D,0A,"LED Dot-matrix display program",0D,0A
+DB 0D,0A,"Enter text to display on screen: ",00
+
+A3F0
+;Initialize 82C55 - 2
+mov dx,8003
+mov al,80
+out dx,al
+ret
+
+A400
+MOV DI,500              ;ADDRESS OF TABLE
+CALL E544               ;IN_ASCIICHAR
+CMP AL,20               ;CHECK TO SEE IF CHAR IS LESS THEN 20
+JNB 430                 ;Jump if character to add to message     
+JMP 490                 ;Start displaying message
+
+A430
+CMP AL,[DI]             ;CHECK INPUT IF EQUAL TO CHAR
+JNE 440                 ;IF NOT GOTO NEXT CHAR
+JMP 450                 ;IF SO DUMP CHAR INTO MEMORY
+
+A440
+ADD DI,6                ;JUMP TO NEXT CHAR
+CMP BYTE PTR [DI],00    ;SEE IF AT END OF TABLE
+JNE 430                 ;IF NOT CHECK NEXT CHAR
+RET
+
+A450
+MOV CL,06               ;Set Loop to 6 times
+INC DI                  ;Increment table pointer
+INC BX                  ;Increment message pointer
+MOV AH,[DI]             ;Get the value from the table DI
+MOV [BX],AH             ;Put the value in address at BX
+LOOP 452                ;Loop to 452
+MOV [BX],CL             ;Add space between chars
+JMP 400                 ;Get input for next char
+
+A490
+;Clear end of memory and set length of message
+MOV CL,23               ;Set Loop to 22 times
+INC BX                  ;Increment message pointer
+XOR AH,AH               ;Set AH to 00
+MOV [BX],AH             ;Put the value in address at BX
+LOOP 492                ;Loop to 452
+SUB BX,10               ;Decrease the length of pointer
+JMP 110                 ;Start displaying message
+
+A500
+;CHARACTER TABLE
+DB "A",3F,48,48,48,3F
+DB "B",7F,49,49,49,36
+DB "C",3E,41,41,41,22
+DB "D",7F,41,41,41,3E
+DB "E",7F,49,49,49,41
+DB "F",7F,48,48,48,40
+DB "G",3E,41,49,49,26
+DB "H",7F,08,08,08,7F
+DB "I",00,41,7F,41,00
+DB "J",06,01,41,7E,40
+DB "K",7F,08,14,22,41
+DB "L",7F,01,01,01,01
+DB "M",7F,40,30,40,7F
+DB "N",7F,10,08,04,7F
+DB "O",3E,41,41,41,3E
+DB "P",7F,48,48,48,30
+DB "Q",3E,41,45,43,3E
+DB "R",7F,48,4C,4A,31
+DB "S",32,49,49,49,26
+DB "T",40,40,7F,40,40
+DB "U",7E,01,01,01,7E
+DB "V",7C,02,01,02,7C
+DB "W",7F,01,06,01,7F
+DB "X",63,14,08,14,63
+DB "Y",60,10,0F,10,60
+DB "Z",43,45,49,51,61
+DB "a",3F,48,48,48,3F
+DB "b",7F,49,49,49,36
+DB "c",3E,41,41,41,22
+DB "d",7F,41,41,41,3E
+DB "e",7F,49,49,49,41
+DB "f",7F,48,48,48,40
+DB "g",3E,41,49,49,26
+DB "h",7F,08,08,08,7F
+DB "i",00,41,7F,41,00
+DB "j",06,01,41,7E,40
+DB "k",7F,08,14,22,41
+DB "l",7F,01,01,01,01
+DB "m",7F,40,30,40,7F
+DB "n",7F,10,08,04,7F
+DB "o",3E,41,41,41,3E
+DB "p",7F,48,48,48,30
+DB "q",3E,41,45,43,3E
+DB "r",7F,48,4C,4A,31
+DB "s",32,49,49,49,26
+DB "t",40,40,7F,40,40
+DB "u",7E,01,01,01,7E
+DB "v",7C,02,01,02,7C
+DB "w",7F,01,06,01,7F
+DB "x",63,14,08,14,63
+DB "y",60,10,0F,10,60
+DB "0",3E,45,49,51,3E
+DB "1",00,21,7F,01,00
+DB "2",21,43,45,49,31
+DB "3",22,41,49,49,36
+DB "4",78,08,08,08,7F
+DB "5",7A,49,49,49,46
+DB "6",3E,49,49,49,26
+DB "7",40,40,4F,50,60
+DB "8",36,49,49,49,36
+DB "9",30,48,48,48,3F
+DB "z",43,45,49,51,61
+DB "?",20,40,45,48,30
+DB "!",00,00,7D,00,00
+DB "'",00,00,60,00,00
+DB ".",00,00,01,00,00
+DB "(",00,00,3E,41,00
+DB ")",00,41,3E,00,00
+DB 20,00,00,00,00,00
+
+N 8088DOWN.COM
+R BX
+0
+R CX
+800
+W
+Q
+
+Name: Matt Cormier
+Title: LED Dot-Matrix Display
+Date: March 29,2004
+Place: Conestoga College (Doon)
+Description: Gets input from the users and displays it on a LED
+        Dot-Matrix Display
